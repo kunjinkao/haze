@@ -1,0 +1,18 @@
+body {
+  background-color: black;
+  color: white;
+}
+
+h1 {
+  color: white;
+}
+
+#status p {
+  font-size: 10px;
+  color: #666;
+}
+
+#changeSoundBtn {
+  height: 80px;
+  font-size: 40px;
+}
