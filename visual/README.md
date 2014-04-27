@@ -7,6 +7,6 @@ We' ll use [Most-Pixels-Ever-Processing](https://github.com/shiffman/Most-Pixels
 
 1. Install [mpe.zip](https://github.com/kunjinkao/haze/raw/master/visual/mpe.zip) on your processing libraries folder.
 
-2. Run the server on one machine `java -jar mpeServer.jar -verbose -framerate30 -screens3` (the jar file in under the mpe library folder).
+2. Run the server on one machine `java -jar mpeServer.jar -verbose -framerate30 -screens3` (the jar file in under the mpe library `server` folder).
 
 3. Run processing sketch with the corresponding xml config file.
