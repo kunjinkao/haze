@@ -1,14 +1,16 @@
 import mpe.client.*;
 
+PShader myshader;
 ArrayList<Ball> balls;
 TCPClient client;
 
 void setup() {
+  myshader = loadShader("color.glsl");
   // make a new Client using an XML file
   client = new TCPClient(this, "mpe.xml");
 
   // the size is determined by the client's local width and height
-  size(client.getLWidth(), client.getLHeight());
+  size(client.getLWidth(), client.getLHeight(), P3D);
 
   // the random seed must be identical for all clients
   randomSeed(1);
@@ -43,7 +45,18 @@ void draw() {
 // Triggered by the client whenever a new frame should be rendered.
 // All synchronized drawing should be done here when in auto mode.
 void frameEvent(TCPClient c) {
-  // clear the screen     
+  // clear the screen
+  background(0);
+
+  shader(myshader); 
+
+  myshader.set("resolution", float(width), float(height));
+  myshader.set("time", float(millis())*0.001);
+  myshader.set("mouse", float(mouseX), float(mouseY));
+  myshader.set("complexity", int(random(5)) + 45);
+  myshader.set("color_intensity", random(2)/10 + 0.5);
+
+  
   background(255);
   
   // move and draw all the balls
