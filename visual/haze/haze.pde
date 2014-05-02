@@ -7,7 +7,10 @@ import java.util.Calendar;
 
 //TCPClient client;
 //PShader bgShader;
-
+import oscP5.*;
+import netP5.*;
+  
+OscP5 oscP5;
 //SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
 Calendar currentDate = Calendar.getInstance();
 Map<String, Integer> loc_map = new HashMap<String, Integer>();
@@ -17,9 +20,15 @@ Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Ma
 void setup() {
   loadData();
 
-  frameRate(10);
-  currentDate.set(2010, 0, 0);
+  frameRate(30);
+  
+  oscP5 = new OscP5(this,12000);
+  oscP5.plug(this, "newDate","/date"); 
+  
+  currentDate.set(2011, 0, 0);
+
   currentDate.add(Calendar.DATE, 1);
+
   println(currentDate);
 
 //  println(loc_data.get("xian").get("2013-1-1"));
@@ -34,8 +43,7 @@ void setup() {
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
     Gas gas = new Gas(dis);
-    gases.put(loc_name, gas);
-    
+    gases.put(loc_name, gas);  
   }
   
   // the random seed must be identical for all clients
@@ -47,6 +55,7 @@ void setup() {
 //  bgShader.set("resolution", float(width), float(height));
   // Starting the client
 //  client.start();
+  background(0);
 }
 
 // Reset it called when the sketch needs to start over
@@ -64,19 +73,17 @@ void setup() {
 // Keep the motor running... draw() needs to be added in auto mode, even if
 // it is empty to keep things rolling.
 void draw() {
-
-  background(0,  250);
-
-  String dateStr = calendaer_to_date(currentDate);
-  currentDate.add(Calendar.DATE, 1);
-   println(dateStr);
-//  String dateStr = dateformat.format(currentDate);
+  
+//  String dateStr = calendaer_to_date(currentDate);
+//  if(frameCount % 180 == 0) {
+//    currentDate.add(Calendar.DATE, 1);    
+//  }
 //  println(dateStr);
 
   for (String loc_name : loc_map.keySet()) {
     Gas gas = gases.get(loc_name);
-    gas.setData(loc_data.get(loc_name).get(dateStr));
-    gas.calc();
+//    gas.setData(loc_data.get(loc_name).get(dateStr));
+    gas.update();
     gas.render();
   }
 
@@ -87,7 +94,7 @@ void draw() {
 //  shader(bgShader);
 
 
-  fill(255);
+//  fill(255);
   
 }
 
@@ -132,6 +139,20 @@ String calendaer_to_date(Calendar c){
   int m = c.get(Calendar.MONTH) + 1;
   int d = c.get(Calendar.DAY_OF_MONTH) + 1;
   return y + "-" + m + "-" + d;
+}
+
+public void newDate(String dateStr) {  
+  for (String loc_name : loc_map.keySet()) {
+    Gas gas = gases.get(loc_name);
+    gas.setData(loc_data.get(loc_name).get(dateStr));
+  }
+}
+
+void oscEvent(OscMessage theOscMessage) {
+  if(theOscMessage.isPlugged()==false) { // not bind to a responder
+    print(" addrpattern: "+theOscMessage.addrPattern());
+    println(" typetag: "+theOscMessage.typetag());
+  }
 }
 
 void loadData() {
@@ -237,5 +258,4 @@ void loadData() {
 
     loc_data.put(loc_name, this_loc_data);
   } 
-
 }
