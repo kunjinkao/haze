@@ -1,72 +1,58 @@
 $(function() {
-  // constant
-  AUDIO = 1;
-  VISUAL = 2;
 
-  $visualSection = $('#visual');
-  $audioSection = $('#audio');
-  $statusData = $("#status-data");
+  var $statusData = $("#status-data");
+  var $trigBtn = $('#trig');
 
-  var dispatch = function(userId){
-    if(userId % 3 === 1) {
-      return VISUAL;
-    } else {
-      return AUDIO;
-    }
+  var setSection = function(args) {
+    var sectionName = args[1];
+    var sectionList = ["control", "schedule", "end"];
+
+    sectionList.map(function(item){
+      if(item==sectionName) {
+        $('#' + item).show();
+      } else {
+        $('#' + item).hide();
+      }
+    });
   };
 
-  var newAudio = function(userId){
-    console.log('new audio');
-    rhizome.send('/interactive/new_audio', [userId]);
-    $visualSection.hide();
-    $audioSection.show();
-  };
-
-  var newVisual = function(userId){
-    console.log('new visual');
-    rhizome.send('/interactive/new_visual', [userId]);
-    $audioSection.hide();
-    $visualSection.show();
-  };
+  $trigBtn.on("click", function(){
+    var args = [rhizome.userId];
+    console.log("triger at user", args);
+    rhizome.send('/haze/trig', args);
+  });
 
 
-  // `rhizome.start` is the first function that should be called. It opens the connection, and gets a user id.
-  // The function inside is executed once the connection has been established properly.
+  rhizome.on('connected', function() {
+    rhizome.send('/sys/subscribe', ['/section']);
+    rhizome.send('/get_section');
+  })
+
+
   rhizome.start(function(err) {
 
     if (err) return alert(err)
 
     var userId = rhizome.userId;
 
-    var type = dispatch(userId);
-
-    // init, new synth for audio
-    if(type===AUDIO) {
-      newAudio(userId);
-    } else if(type===VISUAL) {
-      newVisual(userId);
-    }
-
-    gyro.frequency = 200;
-
+    gyro.frequency = 1000;
+    
     gyro.startTracking(function(o) {
       var args = [userId, o.x, o.y, o.z, o.alpha, o.beta, o.gamma];
       var status = args.slice(1).join(", ");
       $statusData.text(status);
 
-      if(type===AUDIO) {
-        rhizome.send('/interactive/update_audio', args);
-      } else if(type===VISUAL) {
-        rhizome.send('/interactive/update_visual', args);
-      }
+      rhizome.send('/haze/update', args);
 
     });
-
-    $('#changeSoundBtn').on('click', function(){
-      var args = [userId];
-      rhizome.send('/interactive/change', args);
-    });
-
   })
-
+  
+  rhizome.on('message', function(address, args) {
+    if (address === '/sys/subscribed') {
+      console.log('successfully subscribed to ' + args[0])
+    }
+    else if (address === '/section') {
+      setSection(args);
+    }
+  })
 })
