@@ -15,8 +15,8 @@ SynthDef(\del, {arg out = 0, in, feed = 0.93;
     LocalOut.ar([delL, delR]*feed);
     Out.ar(out, Compander.ar(sig, sig, 0.5, 1, 0.5, 0.01, 0.1));
 }).add;
-
 )
+
 ~path = "~/sounds/greedy/".asAbsolutePath;
 
 ~del = Bus.audio(s, 2);

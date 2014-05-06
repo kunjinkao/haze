@@ -6,10 +6,27 @@ import java.util.Date;
 import java.util.Calendar;
 
 //TCPClient client;
-//PShader bgShader;
+
+PShader bgShader;
 import oscP5.*;
 import netP5.*;
-  
+
+// for display words
+PFont wenquanyi;
+String[] title = {
+  "PART1 - HAZE",
+  "PART2 - BODY DANCE",
+  "PART3 - BLIND"
+};
+int title_index;
+String[] performers = {
+  "锟斤拷",
+  "杨众国 & 郭正",
+  "秦岭 & XBH"
+};
+int performers_index;
+
+int mode;
 OscP5 oscP5;
 //SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
 Calendar currentDate = Calendar.getInstance();
@@ -18,17 +35,28 @@ Map<String, Gas> gases = new HashMap<String, Gas>();
 Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Map<String, Map<String, Integer>>>();
 
 void setup() {
+  //load init data  
   loadData();
 
   frameRate(30);
   
+  //display mode  
+  mode = 0;
+  
+  //fonts
+  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
+  title_index = 0;
+  performers_index = 0;
+
+  //osc config
   oscP5 = new OscP5(this,12000);
   oscP5.plug(this, "newDate","/date"); 
-  
+  oscP5.plug(this, "setMode","/mode");
+  oscP5.plug(this, "setText","/text");
+
+  //dates
   currentDate.set(2011, 0, 0);
-
   currentDate.add(Calendar.DATE, 1);
-
   println(currentDate);
 
 //  println(loc_data.get("xian").get("2013-1-1"));
@@ -37,9 +65,10 @@ void setup() {
 //  client = new TCPClient(this, "mpe.xml");
 
   // the size is determined by the client's local width and height
-//  size(client.getLWidth(), client.getLHeight());
-  size(1200, 600);
+  // size(client.getLWidth(), client.getLHeight());
+  size(1200, 600, P3D);
 
+  // setup gases
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
     Gas gas = new Gas(dis);
@@ -50,9 +79,9 @@ void setup() {
 //  randomSeed(1);
 
 
-//  bgShader = loadShader("003.glsl");
+  bgShader = loadShader("whitenoise.glsl");
 
-//  bgShader.set("resolution", float(width), float(height));
+  bgShader.set("resolution", float(width), float(height));  
   // Starting the client
 //  client.start();
   background(0);
@@ -73,26 +102,33 @@ void setup() {
 // Keep the motor running... draw() needs to be added in auto mode, even if
 // it is empty to keep things rolling.
 void draw() {
+  background(0);
   
-//  String dateStr = calendaer_to_date(currentDate);
-//  if(frameCount % 180 == 0) {
-//    currentDate.add(Calendar.DATE, 1);    
-//  }
-//  println(dateStr);
+  if(mode==0) { 
+    for (String loc_name : loc_map.keySet()) {
+      Gas gas = gases.get(loc_name);
+      gas.update();
+      gas.render();
+    }
+  } else if(mode==1) {
+// shaders...
 
-  for (String loc_name : loc_map.keySet()) {
-    Gas gas = gases.get(loc_name);
-//    gas.setData(loc_data.get(loc_name).get(dateStr));
-    gas.update();
-    gas.render();
+//    bgShader.set("mouse", float(mouseX), float(mouseY));
+//    shader(bgShader);
+    background( 0 );
+
+    fill( 255 );
+    textFont( wenquanyi, 100 );    
+    textAlign( CENTER );
+    text(title[title_index], width/2, 200);
+    textFont( wenquanyi, 50 );
+    text("嘉宾", width/2, 350);
+    text(performers[performers_index], width/2, 450);
+
+  } else if(mode==2) {
   }
 
   
-//  shader(bgShader); 
-//  bgShader.set("mouse", float(mouseX), float(mouseY));  
-//  bgShader.set("time", frameCount);
-//  shader(bgShader);
-
 
 //  fill(255);
   
@@ -148,6 +184,15 @@ public void newDate(String dateStr) {
   }
 }
 
+public void setText(int _title, int _performers) {
+  title_index = _title;
+  performers_index = _performers;
+}
+
+public void setMode(int _mode) {  
+  mode = _mode;
+}
+
 void oscEvent(OscMessage theOscMessage) {
   if(theOscMessage.isPlugged()==false) { // not bind to a responder
     print(" addrpattern: "+theOscMessage.addrPattern());
@@ -156,7 +201,7 @@ void oscEvent(OscMessage theOscMessage) {
 }
 
 void loadData() {
-  String path = "/Users/sean/Desktop/haze/data/";
+  String path = "../data/";
 
   loc_map.put("xian", 0);
   loc_map.put("caotan", 4);

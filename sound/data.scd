@@ -17,13 +17,13 @@ d = Dictionary.new;
   \gaoya, 5,
   // \qujiang, 4,
   \xingqing, 1,
-  // \changan, 9,
+  \changan, 9,
   // \guangyuntan, 4,
   // \tiyuchang, 1,
   \yanliang, 4,
   \fangzhicheng, 7,
   // \jingkai, 6,
-  // \gaoxin, 6,
+  \gaoxin, 6,
   // \lintong, 4
 ]);
 
@@ -71,21 +71,28 @@ d = Dictionary.new;
 )
 
 
-(
-~buff = Buffer.readChannel(s, ~path ++ "banknote.wav", channels: [0]);
-~buff2 = Buffer.readChannel(s, ~path ++ "coin2.wav", channels: [0]);
-~buff3 = Buffer.readChannel(s, ~path ++ "coinfall.wav", channels: [0]);
-~buff4 = Buffer.readChannel(s, ~path ++ "shakecoin.wav", channels: [0]);
 
-~buffers = [~buff, ~buff2, ~buff3, ~buff4];
+(
+~buffers.collect(_.free);
+~path = "~/sounds/haze/".asAbsolutePath;
+~buff1 = Buffer.readChannel(s, ~path ++ "banknote.wav", channels: [0]);
+~buff2 = Buffer.readChannel(s, ~path ++ "train.wav", channels: [0]);
+~buff3 = Buffer.readChannel(s, ~path ++ "coin_spin.wav", channels: [0]);
+~buff4 = Buffer.readChannel(s, ~path ++ "rain.aiff", channels: [0]);
+~buff5 = Buffer.readChannel(s, ~path ++ "thunder.wav", channels: [0]);
+~buff6 = Buffer.readChannel(s, ~path ++ "whistle.wav", channels: [0]);
+~buff7 = Buffer.readChannel(s, ~path ++ "slowdown.aiff", channels: [0]);
+~buffers = [~buff1, ~buff2, ~buff3, ~buff4, ~buff5, ~buff6, ~buff7];
 )
 
 
 ~del = Bus.audio(s, 2);
 ~del.index
 
+
 (
-Ndef(\delay, { |in=8, feed=0.4|
+Ndef(\delay).fadeTime = 5;
+Ndef(\delay, { |in=4, feed=0.5|
     var sig = In.ar(in, 2) + LocalIn.ar(2);
     var delL = DelayL.ar(sig[0], 0.5, 0.2);
     var delR = DelayL.ar(sig[1], 0.5, 0.2);
@@ -101,62 +108,76 @@ s.meter
 ~setfunc = {|key, gas_data|
   ~synths.at(key).set(
     \t_trig, 1,
-    // \t, gas_data.so2.linexp(0, 100, 10, 400),
+    \t, gas_data.so2.linexp(0, 100, 10, 300),
+    // \l, rrand(0.4, 4),
+    \l, gas_data.no2.linexp(0, 100, 0.5, 4),
+    \f, gas_data.no2.linlin(0, 100, 50, 150),
+    // \pa, ~loc_maps.at(key).linlin(0, 10, 1, -1),
+    \pa, 0,
     \p, ~loc_maps.at(key).linlin(0, 10, -0.5, 0.5),
-    \spread, gas_data.pm10.linlin(0, 300, 0.05, 0.4),
-    \dur, gas_data.pm25.asFloat.linlin(500, 0, 0.05, 0.40),
-    \rate, gas_data.pm25.asFloat.linlin(0, 500, 0.6, 1.5),
-    // \a, gas_data.at('rate').asFloat.linlin(0, 5, 0.05, 0.1),
-    \pos, gas_data.no2.asFloat.linlin(0, 80, 0.0, 1.0),
-    \a, rrand(0.05, 0.08)
+    \spread, gas_data.pm10.linlin(0, 200, 0.05, 0.8),
+    \dur, gas_data.no2.asFloat.linlin(0, 50, 0.05, 0.5),
+    \att, rrand(6, 9),
+    \rate, ([0, 4, 5, 7, 9, 12, 16, 17] - 12).choose.midiratio,
+    // \rate, gas_data.pm10.asFloat.linlin(0, 400, 0.3, 1.4),
+    \a, gas_data.at('rate').asFloat.linlin(0, 5, 0.02, 0.07),
+    \pos, rrand(0.0, 0.8),
+    // \pos, gas_data.so2.asFloat.linlin(0, 80, 0.0, 1.0),
+    \a, rrand(0.05, 0.1)
+    // \a, ~loc_maps.at(key).linlin(0, 10, 0.02, 0.08)
   );
 };
 
 )
 
+
+~locs = ~loc_maps.keys.asArray.scramble[0];
+
+n.sendMsg('/date', '2010-1-1');
+
 (
-~synths = ();
+~new_date = {|date|
+  var loc_keys = ~loc_maps.keys.asArray;
+  var locs;
 
-~loc_maps.keys.asArray.do({|key, index|
-  var sound = Synth(\granular, [\buff: ~buffers.choose, \t_trig:0, \pos: 0.5, \rate: 0.5, \spread: 0.05, \out:~del, \a, 0.05]);
-  ~synths.put(key,sound);
-});
+  // locs = loc_keys.choose;
+  // locs = loc_keys.scramble[0..4];
+  n.sendMsg('/date', date);
+  date.postln;
 
-t = Task({
-  ~date.do({|date|
-    ~loc_maps.keys.asArray.do({|key|
+  ~locs.asArray.do({|key|
       var gas_data = d.at(key).at(date);
       if (gas_data!=nil) {
         gas_data.postln;
         ~setfunc.value(key, gas_data);
       }
     });
-    3.wait;
-  })
+  // rrand(0.1, 4).wait;
+  rrand(4, 9).wait;
+};
+)
+
+~synths.size
+
+
+(
+~synths.collect(_.release);
+~synths = ();
+
+~loc_maps.keys.asArray.do({|key, index|
+  var sound = Synth(\granular, [\buff: ~buffers[index], \t_trig:0, \pos: 0.5, \rate: 0.5, \spread: 0.05, \out:~del, \a, 0.05]);
+  ~synths.put(key,sound);
+});
+
+t = Task({
+  ~date[300..].do({|date|
+    try {
+      ~new_date.value(date);
+    } { |error|
+      error.species.name.postln;
+    };
+  });
 }).play;
 )
 
-
-~synths.at().set(\t_trig, 1)
-
-
-
-t = Task({
-  ~date.do({|date|
-    date.postln;
-    n.sendMsg('/date', date);
-    0.1.wait;
-  })
-}).play;
-
-
-t = Task({
-  ~date.do({|date|
-    date.postln;
-    n.sendMsg('/date', date);
-    rrand(6,9).wait;
-  })
-}).play;
-
-n.sendMsg('/date', '2013-1-1');
-
+t.stop

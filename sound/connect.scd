@@ -1,4 +1,5 @@
-n = NetAddr("192.168.1.101", 12000);
+~processing = NetAddr("127.0.0.1", 12000);
+n = ~processing;
 ~rhizome = NetAddr.new("127.0.0.1", 9000);
 
 s.meter
@@ -92,3 +93,4 @@ OSCdef.all.do {|item|
 ~section = 'end';
 ~rhizome.sendMsg('/section', 9001, ~section);
 )
+

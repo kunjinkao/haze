@@ -1,4 +1,4 @@
-void drawPoint(float x, float y, float noiseFactor) {
+void drawPoint(float x, float y, float noiseFactor, float... controls) {
 
   pushMatrix();
   translate(x,y);
@@ -6,25 +6,34 @@ void drawPoint(float x, float y, float noiseFactor) {
   noStroke();
   float edgeSize = noiseFactor*30;
   float grey = 80 + (noiseFactor*170);
-  float alpha = 80 + (noiseFactor*170);  
-  fill(grey, alpha);
-  ellipse(0, 0, edgeSize, edgeSize/2);
- 
-//  rotate(noiseFactor*radians(360));
-//  stroke(0,150);
-//  line(0,0,20,0);
+  float alpha = 80 + (noiseFactor*170);
+  float depth = map(noiseFactor, 0.0, 1.0, -0.5, 1);
+
+  float shape_control = map(controls[0], 0.0, 1.0, 1.5, 2.5);
+  int line_control = int(map(controls[1], 0.0, 1.0, 0, 30));
+  int line_alpha = int(map(controls[2], 0.0, 1.0, 0, 150)); 
+  
+  fill(grey, alpha);   
+  translate(0, 0, depth);
+  ellipse(0, 0, edgeSize, edgeSize/shape_control);
+
+  if(line_control != 0 ) {
+    rotate(noiseFactor*radians(360));
+    stroke(0, line_alpha);
+    line(0,0,20,0);
+  }
 
   popMatrix();
 }
 
 
 float smooth_val(float src, float dest) {
-  if(abs(src-dest) <= 0.5) {
+  if(abs(src-dest) <= 1) {
     return dest;
   } else if(dest > src) {
-    return src + 0.5;
+    return src + 1;
   } else if(dest < src) {
-    return src - 0.5;
+    return src - 1;
   } else {
     return dest;
   }
@@ -71,10 +80,10 @@ class Gas {
       rate = num_data.get("rate");
     }
     
-    offset_x_next = map(distance, 0, 9, 50, width-50) + map(so2, 0, 100, -100, 100);
+    offset_x_next = map(distance, 0, 9, 100, width-100) + map(so2, 0, 100, -25, 25);
 
-    gas_width_next = map(pm10, 0, 350, 15, width/4);
-    gas_height_next = map(no2, 0, 100, 15, height);
+    gas_width_next = map(pm10, 0, 350, 25, width/3.5);
+    gas_height_next = map(no2, 0, 100, 25, height);
 
     step1 = map(so2, 0, 200, 0.005, 0.02);
     step2 = map(no2, 0, 100, 0.05, 0.2);
@@ -101,13 +110,19 @@ class Gas {
     ystart += (noise(ysNoise)*0.5)-0.25;
     xNoise = xstart;
     yNoise = ystart;
-
+    
+    float shape_control = map(no2, 0, 100, 0, 1);
+    float line_control = map(pm25, 0, 500, 0, 1);
+    float line_alpha = map(pm10, 0, 350, 0, 1);    
+    float[] extras = {shape_control, line_control, line_alpha};
+    
+    
     for (int y=-int(gas_height); y <= 0; y+=detail) {
       yNoise += step2;
       xNoise = xstart;
       for (int x=-int(gas_width)/2; x<= int(gas_width)/2; x+=detail) {
         xNoise += step2;
-        drawPoint(x, y, noise(xNoise,yNoise));
+        drawPoint(x, y, noise(xNoise,yNoise), extras);
       }
     }
     popMatrix();
