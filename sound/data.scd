@@ -133,7 +133,8 @@ s.meter
 
 ~locs = ~loc_maps.keys.asArray.scramble[0];
 
-n.sendMsg('/date', '2010-1-1');
+~processing = NetAddr("192.168.1.101", 12000);
+~processing.sendMsg('/date', '2010-1-3');
 
 (
 ~new_date = {|date|

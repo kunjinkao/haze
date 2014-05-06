@@ -12,6 +12,9 @@ PShader bgShader;
 import oscP5.*;
 import netP5.*;
 
+float angle = 0;
+PGraphics bgCanvas;
+
 // for display words
 PFont wenquanyi;
 String[] title = {
@@ -27,6 +30,12 @@ String[] performers = {
 };
 int performers_index;
 
+String[] interaction_msg = {
+  "1. 连接到「kunjinkao」的wifi\n2. 用浏览器打开192.168.1.102",
+  "1.杨众国怎么\n2.你怎么了"
+};
+int interaction_msg_index = 0;
+
 int mode;
 OscP5 oscP5;
 //SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
@@ -35,14 +44,16 @@ Map<String, Integer> loc_map = new HashMap<String, Integer>();
 Map<String, Gas> gases = new HashMap<String, Gas>();
 Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Map<String, Map<String, Integer>>>();
 
+
 void setup() {
   //load init data  
   loadData();
 
   frameRate(30);
   
+  
   //display mode  
-  mode = 0;
+  mode = 1;
   
   //fonts
   wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
@@ -54,6 +65,7 @@ void setup() {
   oscP5.plug(this, "newDate","/date"); 
   oscP5.plug(this, "setMode","/mode");
   oscP5.plug(this, "setText","/text");
+  oscP5.plug(this, "setInteractionText","/interaction_text");
 
   //dates
   currentDate.set(2011, 0, 0);
@@ -67,8 +79,9 @@ void setup() {
 
   // the size is determined by the client's local width and height
   // size(client.getLWidth(), client.getLHeight());
-  size(1200, 600, P3D);
+  size(1200, 600);
 
+  bgCanvas =  createGraphics(width, height);
   // setup gases
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
@@ -80,9 +93,9 @@ void setup() {
 //  randomSeed(1);
 
 
-  bgShader = loadShader("whitenoise.glsl");
+//  bgShader = loadShader("whitenoise.glsl");
 
-  bgShader.set("resolution", float(width), float(height));  
+//  bgShader.set("resolution", float(width), float(height));  
   // Starting the client
 //  client.start();
   background(0);
@@ -106,6 +119,7 @@ void draw() {
   background(0);
   
   if(mode==0) { 
+    hint( ENABLE_DEPTH_TEST );
     String dateStr = calendaer_to_date(currentDate);
     if(frameCount % 30 == 0) {
       currentDate.add(Calendar.DATE, 1);    
@@ -118,13 +132,15 @@ void draw() {
       gas.render();
     }
   } else if(mode==1) {
-// shaders...
+    hint( DISABLE_DEPTH_TEST );
+    bgCanvas.beginDraw();
+    draw_glich(bgCanvas, 0);
+    bgCanvas.endDraw();
+    
+    image(bgCanvas, 0, 0);
 
-//    bgShader.set("mouse", float(mouseX), float(mouseY));
-//    shader(bgShader);
-    background( 0 );
-
-    fill( 255 );
+    fill(255);
+    
     textFont( wenquanyi, 100 );    
     textAlign( CENTER );
     text(title[title_index], width/2, 200);
@@ -133,6 +149,24 @@ void draw() {
     text(performers[performers_index], width/2, 450);
 
   } else if(mode==2) {
+
+  hint( DISABLE_DEPTH_TEST );
+
+    bgCanvas.beginDraw();
+    draw_glich(bgCanvas, 1);
+    bgCanvas.endDraw();
+    
+    image(bgCanvas, 0, 0);
+
+    
+    fill(255);
+    textFont( wenquanyi, 100 );        
+    textAlign( CENTER );
+    text("互动", width/2, 200);
+
+    textFont( wenquanyi, 50);
+    text(interaction_msg[interaction_msg_index], width/2, 400);
+
   }
 
   
@@ -189,6 +223,10 @@ public void newDate(String dateStr) {
     Gas gas = gases.get(loc_name);
     gas.setData(loc_data.get(loc_name).get(dateStr));
   }
+}
+
+public void setInteractionText(int _index) {
+  interaction_msg_index = _index;
 }
 
 public void setText(int _title, int _performers) {
