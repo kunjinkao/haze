@@ -106,6 +106,12 @@ void draw() {
   background(0);
   
   if(mode==0) { 
+    String dateStr = calendaer_to_date(currentDate);
+    if(frameCount % 30 == 0) {
+      currentDate.add(Calendar.DATE, 1);    
+    }
+    newDate(dateStr);
+    println(dateStr);
     for (String loc_name : loc_map.keySet()) {
       Gas gas = gases.get(loc_name);
       gas.update();
