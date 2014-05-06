@@ -4,6 +4,7 @@ import java.util.Map;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Calendar;
+import java.io.File;
 
 //TCPClient client;
 
@@ -201,7 +202,11 @@ void oscEvent(OscMessage theOscMessage) {
 }
 
 void loadData() {
-  String path = "../data/";
+  String s = sketchPath("");
+  s = s.substring(0, s.lastIndexOf('/'));
+  s = s.substring(0, s.lastIndexOf('/'));
+  String path = s.substring(0, s.lastIndexOf('/')) + "/data/";
+
 
   loc_map.put("xian", 0);
   loc_map.put("caotan", 4);
