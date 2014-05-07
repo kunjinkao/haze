@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "gyro.js": "~1.0.0",
-    "foundation": "~5.1.1"
+    "foundation": "~5.2.2",
+    "hammerjs": "~1.1.2"
   }
 }

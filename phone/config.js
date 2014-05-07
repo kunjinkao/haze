@@ -1,5 +1,5 @@
 module.exports = {
-  webPort: 8000,
+  webPort: 80,
   oscPort: 9000,
   pages: [
     { rootUrl: '/', dirName: './app' }

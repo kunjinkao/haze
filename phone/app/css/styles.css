@@ -10,3 +10,26 @@ h1 {
 .schedule-list {
   list-style-type: none;
 }
+
+section#control {
+  margin-top: 20px;
+}
+
+/*disable copy and paste*/
+* {
+  -webkit-user-select: none;
+}
+
+a.button, a.button.alert, a.button:visited, a.button.alert:visited{
+  color: white;
+  background-color: black;
+  border: 1px white solid;
+  border-radius: none;
+}
+
+a.button:, a.button.alert {
+  color: white;
+  background-color: black;
+  border: 1px white solid;
+  border-radius: none;
+}

@@ -48,10 +48,19 @@ s.sendMsg(\n_set, ~synths.choose.nodeID, \t_trig, 1);
 OSCdef(\trig, { |args|
   var user_id = args[1];
 
+  var xval = args[2].abs.linlin(0, 8, 0.0, 1.0);
+  var yval = args[3].abs.linlin(0, 8, 0.0, 1.0);
+  var zval = args[4].abs.linlin(0, 8, 0.0, 1.0);
+  var alpha = args[5].linlin(0, 360, 0.0, 1.0);
+  var beta = args[6].linlin(-180, 180, 0.0, 1.0);
+  var gamma = args[7].linlin(-90, 90, 0.0, 1.0);
+
   var node_id = ~user_dict.at(user_id);
   ("trigger" + user_id).postln;
 
-  s.sendMsg(\n_set, node_id, \t_trig, 1);
+  s.sendMsg(\n_set, node_id,
+    \t_trig, 1
+  );
 
 }, '/haze/trig', nil, 9001);
 
