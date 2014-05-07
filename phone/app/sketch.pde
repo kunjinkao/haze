@@ -18,16 +18,27 @@ void draw() {
    mover.update();
    mover.checkEdges();
    mover.display(); 
-   
+
 }
 
 
-void addForce(float _x, float _y){
+public void addForce(float _x, float _y){
   PVector loc = new PVector(_x, _y);
   loc.sub(mover.location)
   loc.normalize();
   loc.mult(10)
   mover.applyForce(loc);
+  background(255);
+}
+
+public void reverse(){
+  mover.velocity.x *= -1;
+  mover.velocity.y *= -1;
+}
+
+public void swipe(float _x, float _y){
+  mover.location.x = constrain(mover.location.x + _x/2, 0, width)
+  mover.location.y = constrain(mover.location.y + _y/2, 0, width)  
 }
 
 void setV(float _vx, float _vy){
@@ -56,11 +67,11 @@ class Mover {
   float topspeed;
 
   Mover() {
-    location = new PVector(2/width, 2/height);
-    velocity = new PVector(random(1), random(1));
+    location = new PVector(width/2, height/2);
+    velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);
-    mass = 1;
-    topspeed = 15;
+    mass = 2;
+    topspeed = 14;
   }
   
   void applyForce(PVector force) {

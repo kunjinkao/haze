@@ -28,3 +28,8 @@ button, button:visited {
   background-color: black;
   border: 1px solid white;
 }
+
+button:hover {
+  color: black;
+  background-color: white;
+}

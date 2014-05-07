@@ -76,16 +76,20 @@ $(function() {
     });
     
     hammertime.on("tap hold", function(event){
-      var touch = event.gesture.center;
+      var touch = event.gesture.touches[0];
       var x = touch.pageX - offsetLeft;
       var y = touch.pageY - offsetTop;
-      console.log(event.gesture);
       p5.addForce(x, y);
     });
 
+    hammertime.on("doubletap", function(event){
+      p5.reverse();
+    });
+
     hammertime.on("swipe", function(event){
-      var vx = event.gesture.velocityX;
-      var vy = event.gesture.velocityY;
+      var x = event.gesture.deltaX;
+      var y = event.gesture.deltaY;
+      p5.swipe(x, y);
     });
 
     console.log(rhizome.userId);
@@ -98,11 +102,12 @@ $(function() {
       var color = "rgb(" + xAcc +',' + xAcc + ',' + xAcc + ")";
       document.body.style.background = color;
 
-      var margin = Math.min(Math.max(5 + o.beta/3, 5), 50)
+      var margin = Math.min(Math.max(5 + o.beta/2, 5), 50)
+
       $controlSection.css({
         "margin-top": margin,
         "position": "relative",
-        "left": o.gamma/4
+        "left": o.gamma/3
       });
     })
 
