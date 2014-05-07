@@ -15,21 +15,16 @@ section#control {
   margin-top: 20px;
 }
 
+#noise {
+  border: 1px solid white;
+}
 /*disable copy and paste*/
 * {
   -webkit-user-select: none;
 }
 
-a.button, a.button.alert, a.button:visited, a.button.alert:visited{
+button, button:visited {
   color: white;
   background-color: black;
-  border: 1px white solid;
-  border-radius: none;
-}
-
-a.button:, a.button.alert {
-  color: white;
-  background-color: black;
-  border: 1px white solid;
-  border-radius: none;
+  border: 1px solid white;
 }

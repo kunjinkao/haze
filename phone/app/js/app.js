@@ -8,6 +8,13 @@ $(function() {
   var canvas = document.getElementById("noise");
   var p5;
 
+  $("button").on("click", function(e){
+    $(this).css({
+      "background-color": "white",
+      "color": "black"
+    });
+    e.preventDefault();
+  })
   var setSection = function(sectionName) {
     var sectionList = ["welcome", "control", "schedule", "end"];
 
@@ -32,12 +39,6 @@ $(function() {
     e.preventDefault();
   });
 
-  $saveBtn.on("click", function(e){
-    var image = canvas.toDataURL("image/png");
-    window.location.href=image;
-    e.preventDefault();
-  });
-
 
   rhizome.on('connected', function() {
     rhizome.send('/sys/subscribe', ['/section']);
@@ -54,6 +55,38 @@ $(function() {
 
     p5 = Processing.getInstanceById("noise");
     p5.setUserId(rhizome.userId);
+    
+    var offset = $(canvas).offset();
+    var offsetLeft = offset.left;
+    var offsetTop = offset.top;
+
+    var hammertime = new Hammer(canvas, options);
+
+  
+    var options = {
+      preventDefault: true
+    };
+
+    var hammertime = new Hammer(canvas, options);
+    
+    hammertime.on("transform", function(event){ 
+      // var scale = event.gesture.scale;
+      // // p5.setScale(scale);
+      // console.log(scale);
+    });
+    
+    hammertime.on("tap hold", function(event){
+      var touch = event.gesture.center;
+      var x = touch.pageX - offsetLeft;
+      var y = touch.pageY - offsetTop;
+      console.log(event.gesture);
+      p5.addForce(x, y);
+    });
+
+    hammertime.on("swipe", function(event){
+      var vx = event.gesture.velocityX;
+      var vy = event.gesture.velocityY;
+    });
 
     console.log(rhizome.userId);
 
@@ -84,4 +117,5 @@ $(function() {
       setSection(args[1]);
     }
   })
+  
 })

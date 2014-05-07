@@ -12,8 +12,7 @@
   <script src="bower_components/processing/processing.min.js"></script>
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/foundation/js/foundation.min.js"></script>
-  <script src="bower_components/foundation/js/foundation/foundation.slider.js">
-  </script>
+  <script src="bower_components/hammerjs/hammer.min.js"></script>
   <script src="bower_components/gyro.js/js/gyro.min.js"></script>
   <script src="js/app.js"></script>
 </head>
@@ -35,32 +34,22 @@
   <section id="control" class="hide">
     <div class="row">
       <div class="small-centered small-12 columns text-center">
-        <canvas data-processing-sources="sketch.pde" id="noise"></canvas>
+        <canvas data-processing-sources="sketch.pde" id="noise" autofocus>
+      </canvas>
       </div>
     </div>
 
     <div class="row">
       <div class="small-centered small-12 columns">
         <h1 class="text-center">control</h1>
-        <div class="range-slider round" data-slider id="slider" data-options="step: 2;">
-          <span class="range-slider-handle"></span>
-          <span class="range-slider-active-segment"></span>
-          <input type="hidden">
-        </div>  
       </div>
     </div>
 
     <div class="row">
       <div class="small-centered small-12 columns text-center">
-          <a id="trig" class="button radius small alert">Trig</a>
+          <button id="trig" class="btn">Trig</button>
       </div>
     </div>
-    <div class="row">
-      <div class="small-centered small-12 columns text-center">
-          <a id="save" class="button radius small ">Save the Image</a>
-      </div>
-    </div>
-
   </section>
 
 
