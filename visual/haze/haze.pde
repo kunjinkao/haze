@@ -56,7 +56,7 @@ void setup() {
   mode = 1;
   
   //fonts
-  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
+//  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
   title_index = 0;
   performers_index = 0;
 
@@ -83,10 +83,12 @@ void setup() {
 
   bgCanvas =  createGraphics(width, height);
   // setup gases
+  int num = 0;
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
     Gas gas = new Gas(dis);
     gases.put(loc_name, gas);  
+    num += 1;
   }
   
   // the random seed must be identical for all clients
@@ -129,6 +131,7 @@ void draw() {
     for (String loc_name : loc_map.keySet()) {
       Gas gas = gases.get(loc_name);
       gas.update();
+       
       gas.render();
     }
   } else if(mode==1) {
@@ -139,9 +142,14 @@ void draw() {
     
     image(bgCanvas, 0, 0);
 
+<<<<<<< Updated upstream
     fill(255);
     
     textFont( wenquanyi, 100 );    
+=======
+    fill( 255 );
+//    textFont( wenquanyi, 100 );    
+>>>>>>> Stashed changes
     textAlign( CENTER );
     text(title[title_index], width/2, 200);
     textFont( wenquanyi, 50 );
@@ -218,11 +226,25 @@ String calendaer_to_date(Calendar c){
   return y + "-" + m + "-" + d;
 }
 
-public void newDate(String dateStr) {  
+public void newDate(String dateStr) {
+  float pm10_total = 0;
+  float pm10_add = 0;
   for (String loc_name : loc_map.keySet()) {
     Gas gas = gases.get(loc_name);
     gas.setData(loc_data.get(loc_name).get(dateStr));
+    pm10_total += gas.pm10;
   }
+
+  for (String loc_name : loc_map.keySet()) {
+    Gas gas = gases.get(loc_name);
+    float left, right;
+    left = pm10_add/pm10_total;
+    pm10_add += gas.pm10;
+    right = pm10_add/pm10_total;
+    
+    gas.setBound(left, right);
+  }
+  
 }
 
 public void setInteractionText(int _index) {

@@ -22,7 +22,7 @@ void drawPoint(float x, float y, float noiseFactor, float... controls) {
     stroke(0, line_alpha);
     line(0,0,20,0);
   }
-
+   
   popMatrix();
 }
 
@@ -39,6 +39,18 @@ float smooth_val(float src, float dest) {
   }
 }
 
+float smooth_val_small(float src, float dest) {
+  if(abs(src-dest) <= 0.005) {
+    return dest;
+  } else if(dest > src) {
+    return src + 0.005;
+  } else if(dest < src) {
+    return src - 0.005;
+  } else {
+    return dest;
+  }
+}
+
 class Gas {
   //--------------------------------------
   int pm25 = 0;
@@ -48,6 +60,10 @@ class Gas {
   int co = 0;
   int rate = 0;
   int distance = 0;
+  int sum_so2 = 0;
+  
+  float left_bound=0.0, right_bound=0.0;
+  float left_bound_next=0, right_bound_next=0;  
 
   float step1 = 0.01; // the step value calculate the noise
   float step2 = 0.1; // the step value calculate the noise
@@ -57,12 +73,13 @@ class Gas {
   
   float offset_x=0, offset_x_next=0;
   float offset_y=0, offset_y_next=0;
-  float gas_width = 5, gas_width_next=5;
-  float gas_height = 10, gas_height_next=10;  
+  float gas_width = 0;
+  float gas_height = height;  
 
   //--------------------------------------
   public Gas(int _distance) {
     distance = _distance;
+    gas_width = 0;
     xstart = random(20);
     ystart = random(20);
     xsNoise = float(20);
@@ -80,32 +97,38 @@ class Gas {
       rate = num_data.get("rate");
     }
     
-    offset_x_next = map(distance, 0, 9, 100, width-100) + map(so2, 0, 100, -25, 25);
+//    offset_x_next = map(distance, 0, 9, 100, width-100) + map(so2, 0, 100, -25, 25);
 
-    gas_width_next = map(pm10, 0, 350, 25, width/3.5);
-    gas_height_next = map(no2, 0, 100, 25, height);
-
-    step1 = map(so2, 0, 200, 0.005, 0.02);
+    step1 = map(so2, 0, 200, -0.005, 0.2);
     step2 = map(no2, 0, 100, 0.05, 0.2);
 
     detail = int(map(rate, 0.0, 5.0, 6.0, 3.0));
   }
 
+  public void setBound(float _left, float _right) {
+    left_bound_next = _left;
+    right_bound_next = _right;
+  }
+  
   public void update() {
+      left_bound = smooth_val_small(left_bound, left_bound_next);
+      right_bound = smooth_val_small(right_bound, right_bound_next); 
+      println(left_bound, right_bound);     
 //    offset_y = smooth_val(offset_y, offset_y_next);
-    offset_x = smooth_val(offset_x, offset_x_next);
-    gas_width = smooth_val(gas_width, gas_width_next);
-    gas_height = smooth_val(gas_height, gas_height_next);
+//    offset_x = smooth_val(offset_x, offset_x_next);
+//    gas_width = smooth_val(gas_width, gas_width_next);
+//    gas_height = smooth_val(gas_height, gas_height_next);
   }
 
   //--------------------------------------
   public void render() {
+    println(left_bound, right_bound);
     pushMatrix();
 
-    translate(offset_x, height - 20);
+    translate(offset_x, height);
 
     xsNoise += step1;    
-    ysNoise += step1;
+    ysNoise += step2;
     xstart += (noise(xsNoise)*0.5)-0.25;
     ystart += (noise(ysNoise)*0.5)-0.25;
     xNoise = xstart;
@@ -120,7 +143,7 @@ class Gas {
     for (int y=-int(gas_height); y <= 0; y+=detail) {
       yNoise += step2;
       xNoise = xstart;
-      for (int x=-int(gas_width)/2; x<= int(gas_width)/2; x+=detail) {
+      for (int x=int(left_bound*width) ; x<=int(right_bound*width); x+=detail) {
         xNoise += step2;
         drawPoint(x, y, noise(xNoise,yNoise), extras);
       }
