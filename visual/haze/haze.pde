@@ -142,14 +142,9 @@ void draw() {
     
     image(bgCanvas, 0, 0);
 
-<<<<<<< Updated upstream
     fill(255);
     
     textFont( wenquanyi, 100 );    
-=======
-    fill( 255 );
-//    textFont( wenquanyi, 100 );    
->>>>>>> Stashed changes
     textAlign( CENTER );
     text(title[title_index], width/2, 200);
     textFont( wenquanyi, 50 );
