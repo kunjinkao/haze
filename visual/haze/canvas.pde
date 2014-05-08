@@ -28,16 +28,16 @@ void draw_glich(PGraphics pg, int mode) {
   float x_noise_tmp = noise(x_noise);
   
   if(mode==0) {
-    x = map(x_noise_tmp, 0, 1, 0, width);
+    x = map(x_noise_tmp, 0, 1, 0, pg.width);
   } else {
     if(x_noise_tmp <=0.5) {
-      x = map(x_noise_tmp, 0, 0.5, 0, 0.1*width);
+      x = map(x_noise_tmp, 0, 0.5, 0, 0.1*pg.width);
     } else {
-      x = map(x_noise_tmp, 0.5, 1, 0.9*width, width);
+      x = map(x_noise_tmp, 0.5, 1, 0.9*pg.width, pg.width);
     }
   }
   println(x);
-  y = map(noise(y_noise), 0, 1, 0, height);
+  y = map(noise(y_noise), 0, 1, 0, pg.height);
 
   rad = map(noise(rad_noise), 0, 1, 0.1, 2.0);
   red_offset = int(map(noise(red_offset_noise), 0, 1, 3,7));

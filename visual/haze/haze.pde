@@ -38,12 +38,20 @@ int interaction_msg_index = 0;
 
 int mode;
 OscP5 oscP5;
+
+int serverOSCPort = 9000;
+int appPort = 9001;
+String rhizomeIP = "192.168.1.100";
+NetAddress rhizomeLocation;
+
 //SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
 Calendar currentDate = Calendar.getInstance();
 Map<String, Integer> loc_map = new HashMap<String, Integer>();
 Map<String, Gas> gases = new HashMap<String, Gas>();
 Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Map<String, Map<String, Integer>>>();
+ArrayList<Gas> gas_array;
 
+PImage barcode;
 
 void setup() {
   //load init data  
@@ -53,10 +61,10 @@ void setup() {
   
   
   //display mode  
-  mode = 1;
+  mode = 0;
   
   //fonts
-//  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
+  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
   title_index = 0;
   performers_index = 0;
 
@@ -66,6 +74,13 @@ void setup() {
   oscP5.plug(this, "setMode","/mode");
   oscP5.plug(this, "setText","/text");
   oscP5.plug(this, "setInteractionText","/interaction_text");
+  oscP5.plug(this, "userTrig","/haze/trig");
+
+  rhizomeLocation = new NetAddress(rhizomeIP, serverOSCPort);
+  OscMessage subscribeMsg = new OscMessage("/sys/subscribe");
+  subscribeMsg.add(12000);
+  subscribeMsg.add("/haze/trig");
+  oscP5.send(subscribeMsg, rhizomeLocation);
 
   //dates
   currentDate.set(2011, 0, 0);
@@ -81,16 +96,23 @@ void setup() {
   // size(client.getLWidth(), client.getLHeight());
   size(1200, 600);
 
+  barcode = loadImage("barcode.png");
+
   bgCanvas =  createGraphics(width, height);
   // setup gases
+  gas_array = new ArrayList<Gas>(); 
+  
   int num = 0;
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
     Gas gas = new Gas(dis);
-    gases.put(loc_name, gas);  
+    gases.put(loc_name, gas); 
+    gas_array.add(gas); 
     num += 1;
   }
   
+  newDate("2010-1-1");
+
   // the random seed must be identical for all clients
 //  randomSeed(1);
 
@@ -122,12 +144,12 @@ void draw() {
   
   if(mode==0) { 
     hint( ENABLE_DEPTH_TEST );
-    String dateStr = calendaer_to_date(currentDate);
-    if(frameCount % 30 == 0) {
-      currentDate.add(Calendar.DATE, 1);    
-    }
-    newDate(dateStr);
-    println(dateStr);
+//    String dateStr = calendaer_to_date(currentDate);
+//    if(frameCount % 30 == 0) {
+//      currentDate.add(Calendar.DATE, 1);    
+//    }
+//    newDate(dateStr);
+//    println(dateStr);
     for (String loc_name : loc_map.keySet()) {
       Gas gas = gases.get(loc_name);
       gas.update();
@@ -165,11 +187,16 @@ void draw() {
     fill(255);
     textFont( wenquanyi, 100 );        
     textAlign( CENTER );
-    text("互动", width/2, 200);
 
-    textFont( wenquanyi, 50);
-    text(interaction_msg[interaction_msg_index], width/2, 400);
-
+    if(interaction_msg_index==0) {
+       text("接入",width/2, 200);
+       textFont( wenquanyi, 50);
+       text(interaction_msg[interaction_msg_index], width/2, 400);
+     } else {
+        text("请打开微信，扫一扫",  width/2, 200);
+        image(barcode, width/2, 250);
+     }
+ 
   }
 
   
@@ -201,24 +228,23 @@ void draw() {
 //  }
 //}
 
-//--------------------------------------
-// Adds a Ball to the stage at the position of the mouse click.
-void mousePressed() {
-  // never include a ":" when broadcasting your message
-//  int x = mouseX + client.getXoffset();
-//  int y = mouseY + client.getYoffset();
-//  client.broadcast(x + "," + y);
-
- int x = mouseX;
- int y = mouseY;
-// balls.add(new Ball(x, y));
-}
 
 String calendaer_to_date(Calendar c){
   int y = c.get(Calendar.YEAR);  
   int m = c.get(Calendar.MONTH) + 1;
   int d = c.get(Calendar.DAY_OF_MONTH) + 1;
   return y + "-" + m + "-" + d;
+}
+
+public void userTrig(float userId, float vx, float vy, float locx, float locy) {
+   Gas gas;
+   int size = gas_array.size();
+   if(userId  < size){
+     gas = gas_array.get(int(userId));    
+   } else {
+     gas = gas_array.get(int(random(size)));
+   }
+   gas.setTrigData(vx, vy, locx, locy);
 }
 
 public void newDate(String dateStr) {
@@ -260,13 +286,15 @@ void oscEvent(OscMessage theOscMessage) {
     print(" addrpattern: "+theOscMessage.addrPattern());
     println(" typetag: "+theOscMessage.typetag());
   }
+
+  if (theOscMessage.addrPattern().equals("/sys/subscribed")) {
+     println("subscribed successfully to address");
+  }
 }
 
 void loadData() {
-  String s = sketchPath("");
-  s = s.substring(0, s.lastIndexOf('/'));
-  s = s.substring(0, s.lastIndexOf('/'));
-  String path = s.substring(0, s.lastIndexOf('/')) + "/data/";
+  String path = "gas/";
+
 
 
   loc_map.put("xian", 0);
