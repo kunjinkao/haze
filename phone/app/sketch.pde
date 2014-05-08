@@ -9,7 +9,7 @@ void setup() {
   mover = new Mover();
   frameRate(10);
   X = width / 2;
-  Y = width / 2;
+  Y = height / 2;
 }
        
 void draw() {
@@ -26,7 +26,7 @@ public void addForce(float _x, float _y){
   PVector loc = new PVector(_x, _y);
   loc.sub(mover.location)
   loc.normalize();
-  loc.mult(10)
+  loc.mult(5);
   mover.applyForce(loc);
   background(255);
 }
@@ -35,6 +35,17 @@ public void reverse(){
   mover.velocity.x *= -1;
   mover.velocity.y *= -1;
 }
+
+public float[] trig(){
+  float x = map(mover.location.x, 0, width, 0, 1);
+  float y = map(mover.location.y, 0, height, 0, 1);
+  return new float[] {mover.velocity.x, mover.velocity.y, x, y };
+}
+
+public void rotateV(float angle){
+  mover.velocity.rotate(radians(angle));
+}
+
 
 public void swipe(float _x, float _y){
   mover.location.x = constrain(mover.location.x + _x/2, 0, width)
@@ -71,7 +82,7 @@ class Mover {
     velocity = new PVector(0, 0);
     acceleration = new PVector(0,0);
     mass = 2;
-    topspeed = 14;
+    topspeed = 20;
   }
   
   void applyForce(PVector force) {

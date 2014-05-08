@@ -1,5 +1,27 @@
 $(function() {
 
+  var getOffsetLeft = function ( elem ){
+      var offsetLeft = 0;
+      do {
+        if ( !isNaN( elem.offsetLeft ) )
+        {
+            offsetLeft += elem.offsetLeft;
+        }
+      } while( elem = elem.offsetParent );
+      return offsetLeft;
+  }
+
+  var getOffsetTop = function( elem ){
+      var offsetTop = 0;
+      do {
+        if ( !isNaN( elem.offsetTop ) )
+        {
+            offsetTop += elem.offsetTop;
+        }
+      } while( elem = elem.offsetParent );
+      return offsetTop;
+  }
+
   var $controlSection  = $("#control");
   var $statusData = $("#status-data");
   var $trigBtn = $('#trig');
@@ -8,13 +30,6 @@ $(function() {
   var canvas = document.getElementById("noise");
   var p5;
 
-  $("button").on("click", function(e){
-    $(this).css({
-      "background-color": "white",
-      "color": "black"
-    });
-    e.preventDefault();
-  })
   var setSection = function(sectionName) {
     var sectionList = ["welcome", "control", "schedule", "end"];
 
@@ -29,13 +44,12 @@ $(function() {
 
 
   $trigBtn.on("click", function(e){
-    var o = gyro.getOrientation();
-    var args = [rhizome.userId, o.x, o.y, o.z, o.alpha, o.beta, o.gamma];
-    var sliderVal = parseInt($slider.attr('data-slider'));
+    var ball = p5.trig();
+    // var o = gyro.getOrientation();
+    var args = [rhizome.userId, ball[0], ball[1], ball[2], ball[3]];
     console.log("triger at user", args);
     rhizome.send('/haze/trig', args);
-    p5.setControl(sliderVal, o.beta, o.gamma);
-
+    // p5.setControl(0, o.beta, o.gamma);
     e.preventDefault();
   });
 
@@ -56,29 +70,31 @@ $(function() {
     p5 = Processing.getInstanceById("noise");
     p5.setUserId(rhizome.userId);
     
-    var offset = $(canvas).offset();
-    var offsetLeft = offset.left;
-    var offsetTop = offset.top;
+    var offsetLeft = getOffsetLeft(canvas);
+    var offsetTop = getOffsetTop(canvas);
 
     var hammertime = new Hammer(canvas, options);
 
   
     var options = {
+      dragLockToAxis: true,
+      holdThreshold: 1,
+      dragBlockHorizontal: true,
       preventDefault: true
     };
 
     var hammertime = new Hammer(canvas, options);
     
-    hammertime.on("transform", function(event){ 
-      // var scale = event.gesture.scale;
-      // // p5.setScale(scale);
-      // console.log(scale);
+    hammertime.on("rotate pitch transform", function(event){ 
+      var angle = event.gesture.angle;
+      p5.rotateV(angle);
     });
     
     hammertime.on("tap hold", function(event){
       var touch = event.gesture.touches[0];
       var x = touch.pageX - offsetLeft;
       var y = touch.pageY - offsetTop;
+      console.log(x, y);
       p5.addForce(x, y);
     });
 

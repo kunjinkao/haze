@@ -23,13 +23,16 @@ section#control {
   -webkit-user-select: none;
 }
 
-button, button:visited {
+button, button:hover, button:active, button:visited {
   color: white;
   background-color: black;
   border: 1px solid white;
 }
 
-button:hover {
-  color: black;
-  background-color: white;
+button:active{
+    -webkit-transform:scale(0.8); 
+    -moz-transform:scale(0.8); 
+    -ms-transform:scale(0.8); 
+    -o-transform:scale(0.8); 
+    transform:scale(0.8); 
 }

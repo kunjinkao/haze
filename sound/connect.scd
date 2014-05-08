@@ -43,47 +43,38 @@ OSCdef(\close, { |args|
 }, '/broadcast/websockets/close', nil, 9001);
 
 
-s.sendMsg(\n_set, ~synths.choose.nodeID, \t_trig, 1);
+
 
 OSCdef(\trig, { |args|
   var user_id = args[1];
 
-  var xval = args[2].abs.linlin(0, 8, 0.0, 1.0);
-  var yval = args[3].abs.linlin(0, 8, 0.0, 1.0);
-  var zval = args[4].abs.linlin(0, 8, 0.0, 1.0);
-  var alpha = args[5].linlin(0, 360, 0.0, 1.0);
-  var beta = args[6].linlin(-180, 180, 0.0, 1.0);
-  var gamma = args[7].linlin(-90, 90, 0.0, 1.0);
+  var vx = args[2];
+  var vy = args[3];
+  var locx = args[3];
+  var locy = args[4];
 
   var node_id = ~user_dict.at(user_id);
-  ("trigger" + user_id).postln;
+  var speed = hypot(vx, vy);
 
+  args.postln;
+  ("trigger" + user_id + node_id).postln;
   s.sendMsg(\n_set, node_id,
+    \t, (speed*15).max(200),
+    \dur, (vx.abs/20),
+    \pos, locx,
+    \l, rrand(0.4, 4),
+    \rate, ([0, 4, 5, 7, 9, 12, 16, 17]).choose.midiratio,
+    \spread, (vy.abs/20),
+    \p, rrand(-0.3, 0.3),
+    \pa, vx/4.max(1).min(-1),
+    \att, rrand(6, 9),
+    \a, locy.linlin(0, 1, 0.01, 0.04),
+    \f, rrand(50, 150),
     \t_trig, 1
   );
 
 }, '/haze/trig', nil, 9001);
 
-OSCdef(\update, { |args|
-  var user_id = args[1];
-
-  var xval = args[2].abs.linlin(0, 8, 0.0, 1.0);
-  var yval = args[3].abs.linlin(0, 8, 0.0, 1.0);
-  var zval = args[4].abs.linlin(0, 8, 0.0, 1.0);
-  var alpha = args[5].linlin(0, 360, 0.0, 1.0);
-  var beta = args[6].linlin(-180, 180, 0.0, 1.0);
-  var gamma = args[7].linlin(-90, 90, 0.0, 1.0);
-
-  var node_id = ~user_dict.at(user_id);
-  var log = "update "++ user_id ++ "node " ++ node_id ++ "args " ++ args;
-  // log.postln;
-
-  s.sendMsg(\n_set, node_id,
-    \rate, rrand(0.8, 1.3),
-    \pa, rrand(-0.5, 0.5)
-  );
-
-}, '/haze/update', nil, 9001);
 
 // successful subscriebed
 OSCdef(\subscribed, { |args|
@@ -97,6 +88,7 @@ OSCdef.all.do {|item|
   ~rhizome.sendMsg('/sys/subscribe', 9001, item.path.asString);
 };
 )
+
 // change section
 (
 ~section = 'end';
