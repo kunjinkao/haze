@@ -1,4 +1,4 @@
-//import mpe.client.*;
+import mpe.client.*;
 import java.util.HashMap; 
 import java.util.Map;
 import java.text.SimpleDateFormat;
@@ -6,11 +6,16 @@ import java.util.Date;
 import java.util.Calendar;
 import java.io.File;
 
-//TCPClient client;
+TCPClient client;
 
-PShader bgShader;
 import oscP5.*;
 import netP5.*;
+
+int serverOSCPort = 9000;
+int appPort = 9001;
+String rhizomeIP = "127.0.0.1";
+NetAddress rhizomeLocation;
+
 
 float angle = 0;
 PGraphics bgCanvas;
@@ -38,11 +43,13 @@ int interaction_msg_index = 0;
 
 int mode;
 OscP5 oscP5;
+OscP5 rhizomeP5;
 //SimpleDateFormat dateformat = new SimpleDateFormat("yyyy-MM-dd");
 Calendar currentDate = Calendar.getInstance();
 Map<String, Integer> loc_map = new HashMap<String, Integer>();
 Map<String, Gas> gases = new HashMap<String, Gas>();
 Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Map<String, Map<String, Integer>>>();
+ArrayList<Gas> gas_array;
 
 
 void setup() {
@@ -53,85 +60,153 @@ void setup() {
   
   
   //display mode  
-  mode = 1;
+  mode = 0;
   
   //fonts
-//  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
+  wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
   title_index = 0;
   performers_index = 0;
 
-  //osc config
-  oscP5 = new OscP5(this,12000);
-  oscP5.plug(this, "newDate","/date"); 
-  oscP5.plug(this, "setMode","/mode");
-  oscP5.plug(this, "setText","/text");
-  oscP5.plug(this, "setInteractionText","/interaction_text");
+  client = new TCPClient(this, "mpe.xml");
+ 
+  if(client.getID() == 0 ){
+    println("subed");
+    oscP5 = new OscP5(this, 12000);
+    oscP5.plug(this, "newDate","/date"); 
+    oscP5.plug(this, "setMode","/mode");
+    oscP5.plug(this, "setText","/text");
+    oscP5.plug(this, "setInteractionText","/interaction_text");
+    oscP5.plug(this, "userTrig","/haze/trig");
 
-  //dates
-  currentDate.set(2011, 0, 0);
-  currentDate.add(Calendar.DATE, 1);
-  println(currentDate);
-
-//  println(loc_data.get("xian").get("2013-1-1"));
+  // rhizome configs and subscribed
+    rhizomeLocation = new NetAddress(rhizomeIP, serverOSCPort);
+    OscMessage subscribeMsg = new OscMessage("/sys/subscribe");
+    subscribeMsg.add(12000);
+    subscribeMsg.add("/haze/trig");
+    oscP5.send(subscribeMsg, rhizomeLocation);
+  }
   
-  // make a new Client using an XML file
-//  client = new TCPClient(this, "mpe.xml");
+  int mWidth;
+  int mHeight;
+
+  mWidth = client.getLWidth();
+  mHeight = client.getLHeight();
 
   // the size is determined by the client's local width and height
-  // size(client.getLWidth(), client.getLHeight());
-  size(1200, 600);
+   size(mWidth, mHeight);
+//  size(1200, 600);
 
-  bgCanvas =  createGraphics(width, height);
+  bgCanvas =  createGraphics(mWidth, mHeight);
+  
+  gas_array = new ArrayList<Gas>();  
   // setup gases
   int num = 0;
+
   for (String loc_name : loc_map.keySet()) {
     int dis = loc_map.get(loc_name);
     Gas gas = new Gas(dis);
-    gases.put(loc_name, gas);  
+    gases.put(loc_name, gas);
+    gas_array.add(gas);
     num += 1;
   }
   
+
+  hint( ENABLE_DEPTH_TEST );
+  
   // the random seed must be identical for all clients
-//  randomSeed(1);
-
-
-//  bgShader = loadShader("whitenoise.glsl");
-
-//  bgShader.set("resolution", float(width), float(height));  
+  randomSeed(1);
+  noiseSeed(1);
   // Starting the client
-//  client.start();
+  client.start();
   background(0);
 }
 
 // Reset it called when the sketch needs to start over
-//void resetEvent(TCPClient c) {
-  // the random seed must be identical for all clients
-//  randomSeed(1);
-//  balls = new ArrayList<Ball>();
-//  for (int i = 0; i < 5; i++) {
-//    Ball ball = new Ball(random(client.getMWidth()), random(client.getMHeight()));
-//    balls.add(ball);
-//  }
-//}
+void resetEvent(TCPClient c) {
+    randomSeed(1);
+    noiseSeed(1);
+}
 
 //--------------------------------------
 // Keep the motor running... draw() needs to be added in auto mode, even if
 // it is empty to keep things rolling.
 void draw() {
-  background(0);
+//  background(0);
+  
+//  if(mode==0) { 
+//    hint( ENABLE_DEPTH_TEST );
+//    String dateStr = calendaer_to_date(currentDate);
+//    if(frameCount % 30 == 0) {
+//      currentDate.add(Calendar.DATE, 1);    
+//    }
+//    newDate(dateStr);
+//    println(dateStr);
+//    for (String loc_name : loc_map.keySet()) {
+//      Gas gas = gases.get(loc_name);
+//      gas.update();
+//      gas.render();
+//    }
+//  } else if(mode==1) {
+//    hint( DISABLE_DEPTH_TEST );
+//    bgCanvas.beginDraw();
+//    draw_glich(bgCanvas, 0);
+//    bgCanvas.endDraw();
+    
+//    image(bgCanvas, 0, 0);
+//
+//    fill(255);
+//    
+//    textFont( wenquanyi, 100 );    
+//    textAlign( CENTER );
+//    text(title[title_index], width/2, 200);
+//    textFont( wenquanyi, 50 );
+//    text("嘉宾", width/2, 350);
+//    text(performers[performers_index], width/2, 450);
+//
+//  } else if(mode==2) {
+//
+//  hint( DISABLE_DEPTH_TEST );
+//
+//    bgCanvas.beginDraw();
+//    draw_glich(bgCanvas, 1);
+//    bgCanvas.endDraw();
+//    
+//    image(bgCanvas, 0, 0);
+//
+//    
+//    fill(255);
+//    textFont( wenquanyi, 100 );        
+//    textAlign( CENTER );
+//    text("互动", width/2, 200);
+//
+//    textFont( wenquanyi, 50);
+//    text(interaction_msg[interaction_msg_index], width/2, 400);
+//
+//  }
+//
+//  
+
+//  fill(255);
+  
+}
+
+//--------------------------------------
+// Triggered by the client whenever a new frame should be rendered.
+// All synchronized drawing should be done here when in auto mode.
+void frameEvent(TCPClient c) {
+    background(0);
   
   if(mode==0) { 
     hint( ENABLE_DEPTH_TEST );
-    String dateStr = calendaer_to_date(currentDate);
-    if(frameCount % 30 == 0) {
-      currentDate.add(Calendar.DATE, 1);    
-    }
-    newDate(dateStr);
-    println(dateStr);
+//    String dateStr = calendaer_to_date(currentDate);
+//    if(frameCount % 30 == 0) {
+//      currentDate.add(Calendar.DATE, 1);    
+//    }
+//    newDate(dateStr);
+//    println(dateStr);
     for (String loc_name : loc_map.keySet()) {
       Gas gas = gases.get(loc_name);
       gas.update();
-       
       gas.render();
     }
   } else if(mode==1) {
@@ -146,10 +221,10 @@ void draw() {
     
     textFont( wenquanyi, 100 );    
     textAlign( CENTER );
-    text(title[title_index], width/2, 200);
+    text(title[title_index], client.getMWidth()/2, 200);
     textFont( wenquanyi, 50 );
-    text("嘉宾", width/2, 350);
-    text(performers[performers_index], width/2, 450);
+    text("嘉宾",client.getMWidth()/2, 350);
+    text(performers[performers_index], client.getMWidth()/2, 450);
 
   } else if(mode==2) {
 
@@ -165,53 +240,42 @@ void draw() {
     fill(255);
     textFont( wenquanyi, 100 );        
     textAlign( CENTER );
-    text("互动", width/2, 200);
+    text("互动", client.getMWidth()/2, 200);
 
     textFont( wenquanyi, 50);
-    text(interaction_msg[interaction_msg_index], width/2, 400);
+    text(interaction_msg[interaction_msg_index], client.getMWidth()/2, 400);
 
   }
 
   
-
-//  fill(255);
-  
-}
-
-//--------------------------------------
-// Triggered by the client whenever a new frame should be rendered.
-// All synchronized drawing should be done here when in auto mode.
-//void frameEvent(TCPClient c) {
-//  // clear the screen     
-//  background(255);
-//  
-//  // move and draw all the balls
-//  for (Ball b : balls) {
-//    b.calc();
-//    b.draw();
-//  }
-//
-//  // read any incoming messages
-//  if (c.messageAvailable()) {
-//    String[] msg = c.getDataMessage();
-//    String[] xy = msg[0].split(",");
-//    float x = Integer.parseInt(xy[0]);
-//    float y = Integer.parseInt(xy[1]);
-//    balls.add(new Ball(x, y));
-//  }
-//}
-
-//--------------------------------------
-// Adds a Ball to the stage at the position of the mouse click.
-void mousePressed() {
-  // never include a ":" when broadcasting your message
-//  int x = mouseX + client.getXoffset();
-//  int y = mouseY + client.getYoffset();
-//  client.broadcast(x + "," + y);
-
- int x = mouseX;
- int y = mouseY;
-// balls.add(new Ball(x, y));
+  // read any incoming messages
+  if (c.messageAvailable()) {
+    String[] msg = c.getDataMessage();
+    String[] data = msg[0].split(",");
+    String type = data[0];
+    println(data);
+    if(type.equals("date")) {
+      String dateStr = data[1];
+      newDateAction(dateStr);
+    } else if(type.equals("mode")) {
+      int mode = parseInt(data[1]);
+      setModeAction(mode);
+    } else if(type.equals("text")){
+      int title_index = parseInt(data[1]);
+      int p_index = parseInt(data[2]);
+      setTextAction(title_index, p_index);
+    } else if(type.equals("interaction_text")){
+      int index = parseInt(data[0]);
+      setInteractionTextAction(index);
+    } else if(type.equals("user_trig")){
+      float userId = parseFloat(data[1]);
+      float vx = parseFloat(data[2]);
+      float vy = parseFloat(data[3]);
+      float locx = parseFloat(data[4]);
+      float locy = parseFloat(data[5]);
+      userTrigAction(userId, vx, vy, locx, locy);      
+    }
+  }
 }
 
 String calendaer_to_date(Calendar c){
@@ -222,8 +286,13 @@ String calendaer_to_date(Calendar c){
 }
 
 public void newDate(String dateStr) {
+   client.broadcast("date" + "," + dateStr);
+}
+
+public void newDateAction(String dateStr) {
   float pm10_total = 0;
   float pm10_add = 0;
+
   for (String loc_name : loc_map.keySet()) {
     Gas gas = gases.get(loc_name);
     gas.setData(loc_data.get(loc_name).get(dateStr));
@@ -242,16 +311,43 @@ public void newDate(String dateStr) {
   
 }
 
+public void userTrig(float userId, float vx, float vy, float locx, float locy) {
+  client.broadcast("user_trig" + "," + userId + ',' + vx + ',' + vy + ',' + locx + ',' + locy);
+}
+public void userTrigAction(float userId, float vx, float vy, float locx, float locy) {
+  Gas gas;
+  int size = gas_array.size();
+  if(userId  < size){
+    gas = gas_array.get(int(userId));    
+  } else {
+    gas = gas_array.get(int(random(size)));
+  }
+  gas.setBound(locx, locy);
+  gas.setUserSpeed(vx, vy);
+}
+
 public void setInteractionText(int _index) {
+  client.broadcast("interaction_text" + "," + _index);
+}
+
+public void setInteractionTextAction(int _index) {
   interaction_msg_index = _index;
 }
 
 public void setText(int _title, int _performers) {
+  client.broadcast("text" + "," + _title + ',' + _performers);
+}
+
+public void setTextAction(int _title, int _performers) {
   title_index = _title;
   performers_index = _performers;
 }
 
-public void setMode(int _mode) {  
+public void setMode(int _mode) {
+  client.broadcast("mode" + "," + _mode);  
+}
+
+public void setModeAction(int _mode) {  
   mode = _mode;
 }
 
@@ -260,14 +356,14 @@ void oscEvent(OscMessage theOscMessage) {
     print(" addrpattern: "+theOscMessage.addrPattern());
     println(" typetag: "+theOscMessage.typetag());
   }
+
+  if (theOscMessage.addrPattern().equals("/sys/subscribed")) {
+    println("subscribed successfully to address");
+  }
 }
 
 void loadData() {
-  String s = sketchPath("");
-  s = s.substring(0, s.lastIndexOf('/'));
-  s = s.substring(0, s.lastIndexOf('/'));
-  String path = s.substring(0, s.lastIndexOf('/')) + "/data/";
-
+  String path = "gas/";
 
   loc_map.put("xian", 0);
   loc_map.put("caotan", 4);

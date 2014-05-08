@@ -133,8 +133,7 @@ s.meter
 
 ~locs = ~loc_maps.keys.asArray.scramble[0];
 
-~processing = NetAddr("192.168.1.101", 12000);
-~processing.sendMsg('/date', '2013-4-5');
+
 
 (
 ~new_date = {|date|
@@ -144,6 +143,7 @@ s.meter
   // locs = loc_keys.choose;
   // locs = loc_keys.scramble[0..4];
   n.sendMsg('/date', date);
+
   date.postln;
 
   ~locs.asArray.do({|key|
@@ -153,8 +153,8 @@ s.meter
         ~setfunc.value(key, gas_data);
       }
     });
-  // rrand(0.1, 4).wait;
-  rrand(4, 9).wait;
+  rrand(0.1, 4).wait;
+  // rrand(4, 9).wait;
 };
 )
 
@@ -170,7 +170,7 @@ s.meter
   ~synths.put(key,sound);
 });
 
-t = Task({
+Tdef(\date, {
   ~date[300..].do({|date|
     try {
       ~new_date.value(date);
@@ -179,6 +179,8 @@ t = Task({
     };
   });
 }).play;
+
 )
 
 t.stop
+n.sendMsg('/date', '2012-1-1')
