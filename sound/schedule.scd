@@ -1,5 +1,6 @@
 ~processing = NetAddr("127.0.0.1", 12000);
 
+~processing.sendMsg('/mode', 0);
 // part1- haze
 (
 ~processing.sendMsg('/text', 0, 0);
