@@ -13,7 +13,7 @@ import netP5.*;
 
 int serverOSCPort = 9000;
 int appPort = 9001;
-String rhizomeIP = "127.0.0.1";
+String rhizomeIP = "192.168.1.100";
 NetAddress rhizomeLocation;
 
 
@@ -36,7 +36,7 @@ String[] performers = {
 int performers_index;
 
 String[] interaction_msg = {
-  "1. 连接到「kunjinkao」的wifi\n2. 用浏览器打开192.168.1.102",
+  "1. 连接到「kunjinkao」的wifi\n2. 用浏览器打开192.168.1.100",
   "1.杨众国怎么\n2.你怎么了"
 };
 int interaction_msg_index = 0;
@@ -51,6 +51,7 @@ Map<String, Gas> gases = new HashMap<String, Gas>();
 Map<String, Map<String, Map<String, Integer>>> loc_data = new HashMap<String, Map<String, Map<String, Integer>>>();
 ArrayList<Gas> gas_array;
 
+PImage barcode;
 
 void setup() {
   //load init data  
@@ -66,6 +67,7 @@ void setup() {
   wenquanyi = loadFont("WenQuanYiZenHei-80.vlw");
   title_index = 0;
   performers_index = 0;
+  barcode = loadImage("barcode.png");
 
   client = new TCPClient(this, "mpe.xml");
  
@@ -92,6 +94,7 @@ void setup() {
   mWidth = client.getLWidth();
   mHeight = client.getLHeight();
 
+  barcode = loadImage("barcode.png");
   // the size is determined by the client's local width and height
    size(mWidth, mHeight);
 //  size(1200, 600);
@@ -240,10 +243,15 @@ void frameEvent(TCPClient c) {
     fill(255);
     textFont( wenquanyi, 100 );        
     textAlign( CENTER );
-    text("互动", client.getMWidth()/2, 200);
-
-    textFont( wenquanyi, 50);
-    text(interaction_msg[interaction_msg_index], client.getMWidth()/2, 400);
+    if(interaction_msg_index==0) {
+      text("接入", client.getMWidth()/2, 200);
+      textFont( wenquanyi, 50);
+      text(interaction_msg[interaction_msg_index], client.getMWidth()/2, 400);
+    } else {
+      text("请打开微信，扫一扫",  client.getMWidth()/2, 200);
+      image(barcode, client.getMWidth()/2, 400);
+    }
+    
 
   }
 
@@ -265,7 +273,7 @@ void frameEvent(TCPClient c) {
       int p_index = parseInt(data[2]);
       setTextAction(title_index, p_index);
     } else if(type.equals("interaction_text")){
-      int index = parseInt(data[0]);
+      int index = parseInt(data[1]);
       setInteractionTextAction(index);
     } else if(type.equals("user_trig")){
       float userId = parseFloat(data[1]);
@@ -314,6 +322,7 @@ public void newDateAction(String dateStr) {
 public void userTrig(float userId, float vx, float vy, float locx, float locy) {
   client.broadcast("user_trig" + "," + userId + ',' + vx + ',' + vy + ',' + locx + ',' + locy);
 }
+
 public void userTrigAction(float userId, float vx, float vy, float locx, float locy) {
   Gas gas;
   int size = gas_array.size();
@@ -322,8 +331,7 @@ public void userTrigAction(float userId, float vx, float vy, float locx, float l
   } else {
     gas = gas_array.get(int(random(size)));
   }
-  gas.setBound(locx, locy);
-  gas.setUserSpeed(vx, vy);
+  gas.setTrigData(vx, vy, locx, locy);
 }
 
 public void setInteractionText(int _index) {

@@ -79,8 +79,7 @@ class Gas {
   float gas_height = client.getMHeight();  
   
  
-  float angle_speed = 0;
-  float angle_speed_next = 0;
+  float line_control = 0;
 
   float gas_scale = 1;
   float gas_scale_next = 1;
@@ -104,20 +103,19 @@ class Gas {
       no2 = num_data.get("no2");
       co = num_data.get("co");
       rate = num_data.get("rate");
-      
+      step1 = map(so2, 0, 200, -0.005, 0.2);
+      step2 = map(no2, 0, 100, 0.05, 0.2);
+      line_control = map(pm25, 0, 500, 0, 1);
+      detail = int(map(rate, 0.0, 5.0, 6.0, 3.0));
     }
     
 //    offset_x_next = map(distance, 0, 9, 100, width-100) + map(so2, 0, 100, -25, 25);
-
-    step1 = map(so2, 0, 200, -0.005, 0.2);
-    step2 = map(no2, 0, 100, 0.05, 0.2);
-
-    detail = int(map(rate, 0.0, 5.0, 6.0, 3.0));
   }
 
-  public void setUserSpeed(float vx, float vy) {
-    angle_speed_next = radians(vx / 4);
-    gas_scale_next = map(abs(vy), 0, 10, 0.5, 2);
+  public void setTrigData(float vx, float vy, float locx, float locy){
+    line_control = locy;    
+    gas_scale_next = map(abs(vy), 0, 10, 1, 1.5);
+    this.setBound(locx, locx + map(vx, 0, 15, 0.1, 0.3));
   }
 
   public void setBound(float _left, float _right) {
@@ -130,9 +128,7 @@ class Gas {
 //      right_bound = smooth_val_small(right_bound, right_bound_next);
     left_bound += (left_bound_next- left_bound)/delay;
     right_bound += (right_bound_next- right_bound)/delay;
-    
-    angle_speed += (angle_speed - angle_speed_next)/(delay * 2);
-    gas_scale += (gas_scale - gas_scale_next)/(delay * 3);
+    gas_scale += (gas_scale_next - gas_scale)/(delay * 3);
 
 //    offset_y = smooth_val(offset_y, offset_y_next);
 //    offset_x = smooth_val(offset_x, offset_x_next);
@@ -145,10 +141,7 @@ class Gas {
     pushMatrix();
 
     translate(offset_x, client.getMHeight()/2);
-   
     scale(gas_scale);
-
-    rotate(angle_speed * (frameCount % 100));
 
     xsNoise += step1;    
     ysNoise += step2;
@@ -158,7 +151,6 @@ class Gas {
     yNoise = ystart;
     
     float shape_control = map(no2, 0, 100, 0, 1);
-    float line_control = map(pm25, 0, 500, 0, 1);
     float line_alpha = map(pm10, 0, 350, 0, 1);    
     float[] extras = {shape_control, line_control, line_alpha};
     

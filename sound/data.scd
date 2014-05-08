@@ -182,5 +182,16 @@ Tdef(\date, {
 
 )
 
+
+Tdef(\date, {
+  ~date[300..].do({|date|
+    try {
+      ~new_date.value(date);
+    } { |error|
+      error.species.name.postln;
+    };
+  });
+}).stop
+
 t.stop
 n.sendMsg('/date', '2012-1-1')
