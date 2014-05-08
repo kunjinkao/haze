@@ -6,7 +6,7 @@ s.meter
 
 
 (
-var data_file_path = "~/Desktop/haze/data/".absolutePath;
+var data_file_path = "~/Desktop/haze/visual/haze/data/gas/".absolutePath;
 ~date = parseJson(File(data_file_path++"date.txt", "r").readAllString).collect(_.asSymbol);
 d = Dictionary.new;
 ~loc_maps = ();
